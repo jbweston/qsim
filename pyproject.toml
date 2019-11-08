@@ -1,0 +1,29 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "qsim"
+author = "Joseph Weston"
+author-email = "joseph@weston.cloud"
+home-page = "https://github.com/jbweston/qsim"
+requires-python=">=3.6"
+description-file="README.md"
+keywords = "quantum simulator"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "numpy",
+]
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-flake8",
+    "hypothesis",
+    "tox",
+    "flake8-per-file-ignores",
+]
+doc = [
+    "sphinx",
+]

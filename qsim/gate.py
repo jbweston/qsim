@@ -1,3 +1,3 @@
 """Quantum gate operations"""
 
-__all__ = []
+__all__ = []  # type: ignore

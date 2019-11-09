@@ -10,7 +10,7 @@ by the associated classical bitstring.
 
 import numpy as np
 
-__all__ = ["from_classical"]
+__all__ = ["from_classical"]  # type: ignore
 
 
 def from_classical(bitstring):

@@ -28,6 +28,7 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-flake8",
+    "pytest-mypy",
     "hypothesis",
     "tox",
     "flake8-per-file-ignores",

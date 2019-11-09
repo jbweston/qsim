@@ -24,6 +24,9 @@ test = [
     "tox",
     "flake8-per-file-ignores",
 ]
-doc = [
+docs = [
     "sphinx",
+    "sphinx-rtd-theme",
+    "m2r",  # markdown support
+    "sphinxcontrib.apidoc",  # run sphinx-apidoc when building docs
 ]

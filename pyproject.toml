@@ -30,7 +30,7 @@ test = [
     "pytest-flake8",
     "pytest-mypy",
     "pytest-black",
-    "hypothesis",
+    "hypothesis[numpy]",
     "tox",
     "flake8-per-file-ignores",
 ]

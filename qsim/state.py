@@ -24,7 +24,7 @@ def from_classical(bitstring):
 
     Returns
     -------
-    state : ndarray[complex]
+    state : ndarray[(2**n,), complex]
         The state vector in the computational basis.
         Has :math:`2^n` components.
     """

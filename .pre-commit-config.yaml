@@ -8,7 +8,9 @@ repos:
     rev: v2.1.0
     hooks:
     - id: end-of-file-fixer
+      exclude: '.bumpversion.cfg'
     - id: trailing-whitespace
+      exclude: '.bumpversion.cfg'
 # Disable this until 3.8.0 is released (as explained in
 # https://gitlab.com/pycqa/flake8/issues/450)
 #-   repo: https://gitlab.com/pycqa/flake8

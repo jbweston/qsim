@@ -13,6 +13,7 @@ keywords = "quantum simulator"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Development Status :: 1 - Planning",
+    "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",

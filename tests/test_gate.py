@@ -144,3 +144,42 @@ def test_deutch():
 
 def test_swap():
     assert np.all(qsim.gate.swap @ qsim.gate.swap == np.identity(4))
+
+
+@given(single_qubit_gates, n_qubits.flatmap(ket), n_qubits.flatmap(select_n_qubits(1)))
+def test_applying_single_gates(gate, state, selected):
+    qubit, = selected
+    n_qubits = state.shape[0].bit_length() - 1
+    parts = [np.identity(2)] * n_qubits
+    parts[qubit] = gate
+    big_gate = product_gate(parts)
+
+    should_be = big_gate @ state
+    state = qsim.gate.apply(gate, [qubit], state)
+
+    assert np.allclose(state, should_be)
+
+
+@given(
+    single_qubit_gates,
+    n_qubits.filter(lambda n: n > 1).flatmap(ket),
+    n_qubits.filter(lambda n: n > 1).flatmap(select_n_qubits(2)),
+)
+def test_applying_controlled_single_qubit_gates(gate, state, selected):
+    control, qubit = selected
+    n_qubits = state.shape[0].bit_length() - 1
+    # When control qubit is |0⟩ the controlled gate acts like the identity on the other qubit
+    parts_zero = [np.identity(2)] * n_qubits
+    parts_zero[control] = project_zero
+    parts_zero[qubit] = np.identity(2)
+    # When control qubit is |1⟩ the controlled gate acts like the original gate on the other qubit
+    parts_one = [np.identity(2)] * n_qubits
+    parts_one[control] = project_one
+    parts_one[qubit] = gate
+    # The total controlled gate is then the sum of these 2 product gates
+    big_gate = product_gate(parts_zero) + product_gate(parts_one)
+
+    should_be = big_gate @ state
+    state = qsim.gate.apply(qsim.gate.controlled(gate), [control, qubit], state)
+
+    assert np.allclose(state, should_be)

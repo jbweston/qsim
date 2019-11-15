@@ -7,22 +7,32 @@ import pytest
 import qsim.gate
 
 
-def unitary(n):
-    valid_complex = st.complex_numbers(allow_infinity=False, allow_nan=False)
+# -- Strategies for generating values --
+
+
+n_qubits = st.shared(st.integers(min_value=1, max_value=6))
+
+
+valid_complex = st.complex_numbers(allow_infinity=False, allow_nan=False)
+phases = st.floats(
+    min_value=0, max_value=2 * np.pi, allow_nan=False, allow_infinity=False
+)
+
+
+def unitary(n_qubits):
+    size = 1 << n_qubits
     return (
-        hnp.arrays(complex, (n, n), valid_complex)
+        hnp.arrays(complex, (size, size), valid_complex)
         .map(lambda a: np.linalg.qr(a)[0])
         .filter(lambda u: np.all(np.isfinite(u)))
     )
 
 
-n_qubits = st.shared(st.integers(min_value=1, max_value=6))
-phases = st.floats(
-    min_value=0, max_value=2 * np.pi, allow_nan=False, allow_infinity=False
-)
-single_qubit_gates = unitary(2)
-two_qubit_gates = unitary(4)
-n_qubit_gates = n_qubits.map(lambda n: 2 ** n).flatmap(unitary)
+single_qubit_gates = unitary(1)
+two_qubit_gates = unitary(2)
+n_qubit_gates = n_qubits.flatmap(unitary)
+
+# -- Tests --
 
 
 @given(n_qubits, n_qubit_gates)

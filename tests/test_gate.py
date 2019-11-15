@@ -53,7 +53,7 @@ def test_n_qubits_invalid(gate):
 
 @given(n_qubits, n_qubit_gates)
 def test_controlled(n, gate):
-    nq = 2 ** n
+    nq = 1 << n
     controlled_gate = qsim.gate.controlled(gate)
     assert controlled_gate.shape[0] == 2 * nq
     assert np.all(controlled_gate[:nq, :nq] == np.identity(nq))

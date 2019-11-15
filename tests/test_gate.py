@@ -1,3 +1,5 @@
+from functools import reduce
+
 from hypothesis import given
 import hypothesis.strategies as st
 import hypothesis.extra.numpy as hnp
@@ -11,6 +13,17 @@ import qsim.gate
 
 
 n_qubits = st.shared(st.integers(min_value=1, max_value=6))
+
+
+# Choose which qubits from 'n_qubits' to operate on with a gate that
+# operates on 'gate_size' qubits
+def select_n_qubits(gate_size):
+    def _strat(n_qubits):
+        assert n_qubits >= gate_size
+        possible_qubits = st.integers(0, n_qubits - 1)
+        return st.lists(possible_qubits, gate_size, gate_size, unique=True).map(tuple)
+
+    return _strat
 
 
 valid_complex = st.complex_numbers(allow_infinity=False, allow_nan=False)
@@ -28,9 +41,29 @@ def unitary(n_qubits):
     )
 
 
+def ket(n_qubits):
+    size = 1 << n_qubits
+    return (
+        hnp.arrays(complex, (size,), valid_complex)
+        .filter(lambda v: np.linalg.norm(v) > 0)  # vectors must be normalizable
+        .map(lambda v: v / np.linalg.norm(v))
+    )
+
+
 single_qubit_gates = unitary(1)
 two_qubit_gates = unitary(2)
 n_qubit_gates = n_qubits.flatmap(unitary)
+
+# Projectors on the single qubit computational basis
+project_zero = np.array([[1, 0], [0, 0]])
+project_one = np.array([[0, 0], [0, 1]])
+
+
+def product_gate(single_qubit_gates):
+    # We reverse so that 'single_qubit_gates' can be indexed by the qubit
+    # identifier; e.g. qubit #0 is actually the least-significant qubit
+    return reduce(np.kron, reversed(single_qubit_gates))
+
 
 # -- Tests --
 
@@ -111,3 +144,42 @@ def test_deutch():
 
 def test_swap():
     assert np.all(qsim.gate.swap @ qsim.gate.swap == np.identity(4))
+
+
+@given(single_qubit_gates, n_qubits.flatmap(ket), n_qubits.flatmap(select_n_qubits(1)))
+def test_applying_single_gates(gate, state, selected):
+    qubit, = selected
+    n_qubits = state.shape[0].bit_length() - 1
+    parts = [np.identity(2)] * n_qubits
+    parts[qubit] = gate
+    big_gate = product_gate(parts)
+
+    should_be = big_gate @ state
+    state = qsim.gate.apply(gate, [qubit], state)
+
+    assert np.allclose(state, should_be)
+
+
+@given(
+    single_qubit_gates,
+    n_qubits.filter(lambda n: n > 1).flatmap(ket),
+    n_qubits.filter(lambda n: n > 1).flatmap(select_n_qubits(2)),
+)
+def test_applying_controlled_single_qubit_gates(gate, state, selected):
+    control, qubit = selected
+    n_qubits = state.shape[0].bit_length() - 1
+    # When control qubit is |0⟩ the controlled gate acts like the identity on the other qubit
+    parts_zero = [np.identity(2)] * n_qubits
+    parts_zero[control] = project_zero
+    parts_zero[qubit] = np.identity(2)
+    # When control qubit is |1⟩ the controlled gate acts like the original gate on the other qubit
+    parts_one = [np.identity(2)] * n_qubits
+    parts_one[control] = project_one
+    parts_one[qubit] = gate
+    # The total controlled gate is then the sum of these 2 product gates
+    big_gate = product_gate(parts_zero) + product_gate(parts_one)
+
+    should_be = big_gate @ state
+    state = qsim.gate.apply(qsim.gate.controlled(gate), [control, qubit], state)
+
+    assert np.allclose(state, should_be)

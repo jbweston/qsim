@@ -38,7 +38,7 @@ def _check_valid_gate(gate):
         and gate.shape[0] == gate.shape[1]
         # has size 2**n, n > 1
         and np.log2(gate.shape[0]).is_integer()
-        and np.log2(gate.shape[0]) > 0
+        and gate.shape[0].bit_length() > 1
         # is unitary
         and np.allclose(gate @ gate.conjugate().transpose(), np.identity(gate.shape[0]))
     ):
@@ -52,9 +52,7 @@ def n_qubits(gate):
     an integer power of 2.
     """
     _check_valid_gate(gate)
-    n = np.log2(gate.shape[0])
-    assert n.is_integer()
-    return int(n)
+    return gate.shape[0].bit_length() - 1
 
 
 def controlled(gate):

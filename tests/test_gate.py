@@ -1,3 +1,5 @@
+from functools import reduce
+
 from hypothesis import given
 import hypothesis.strategies as st
 import hypothesis.extra.numpy as hnp
@@ -55,6 +57,12 @@ n_qubit_gates = n_qubits.flatmap(unitary)
 # Projectors on the single qubit computational basis
 project_zero = np.array([[1, 0], [0, 0]])
 project_one = np.array([[0, 0], [0, 1]])
+
+
+def product_gate(single_qubit_gates):
+    # We reverse so that 'single_qubit_gates' can be indexed by the qubit
+    # identifier; e.g. qubit #0 is actually the least-significant qubit
+    return reduce(np.kron, reversed(single_qubit_gates))
 
 
 # -- Tests --

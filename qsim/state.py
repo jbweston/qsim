@@ -30,12 +30,12 @@ def from_classical(bitstring):
     """
 
     bitstring = "".join(map(str, bitstring))
-    n = len(bitstring)
+    n_qubits = len(bitstring)
     try:
         index = int(bitstring, base=2)
     except ValueError:
         raise ValueError("Input is not a classical bitstring") from None
 
-    state = np.zeros(2 ** n, dtype=complex)
+    state = np.zeros(1 << n_qubits, dtype=complex)
     state[index] = 1
     return state

@@ -13,6 +13,17 @@ import qsim.gate
 n_qubits = st.shared(st.integers(min_value=1, max_value=6))
 
 
+# Choose which qubits from 'n_qubits' to operate on with a gate that
+# operates on 'gate_size' qubits
+def select_n_qubits(gate_size):
+    def _strat(n_qubits):
+        assert n_qubits >= gate_size
+        possible_qubits = st.integers(0, n_qubits - 1)
+        return st.lists(possible_qubits, gate_size, gate_size, unique=True).map(tuple)
+
+    return _strat
+
+
 valid_complex = st.complex_numbers(allow_infinity=False, allow_nan=False)
 phases = st.floats(
     min_value=0, max_value=2 * np.pi, allow_nan=False, allow_infinity=False

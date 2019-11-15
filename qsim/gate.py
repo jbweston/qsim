@@ -30,6 +30,19 @@ __all__ = [
 
 
 def apply(gate, qubits, state):
+    """Apply a gate to the specified qubits of a state
+
+    Parameters
+    ----------
+    gate : ndarray[complex]
+    qubits : sequence of int
+        The qubits on which to act. Qubit 0 is the least significant qubit.
+    state : ndarray[complex]
+
+    Returns
+    -------
+    new_state : ndarray[complex]
+    """
     n_gate_qubits = gate.shape[0].bit_length() - 1
     n_state_qubits = state.shape[0].bit_length() - 1
     assert len(qubits) == n_gate_qubits

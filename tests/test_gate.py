@@ -28,6 +28,15 @@ def unitary(n_qubits):
     )
 
 
+def ket(n_qubits):
+    size = 1 << n_qubits
+    return (
+        hnp.arrays(complex, (size,), valid_complex)
+        .filter(lambda v: np.linalg.norm(v) > 0)  # vectors must be normalizable
+        .map(lambda v: v / np.linalg.norm(v))
+    )
+
+
 single_qubit_gates = unitary(1)
 two_qubit_gates = unitary(2)
 n_qubit_gates = n_qubits.flatmap(unitary)

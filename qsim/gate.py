@@ -7,6 +7,7 @@ matrix written in the computational basis.
 import numpy as np
 
 __all__ = [
+    "apply",
     "n_qubits",
     "controlled",
     # -- Single qubit gates --
@@ -26,6 +27,38 @@ __all__ = [
     "fredkin",
     "deutsch",
 ]  # type: ignore
+
+
+def apply(gate, qubits, state):
+    n_gate_qubits = gate.shape[0].bit_length() - 1
+    n_state_qubits = state.shape[0].bit_length() - 1
+    assert len(qubits) == n_gate_qubits
+
+    # We can view an n-qubit gate as a 2*n-tensor (n contravariant and n contravariant
+    # indices) and an n-qubit state as an n-tensor (contravariant indices)
+    # with each axis having length 2 (the state space of a single qubit).
+    gate = gate.reshape((2,) * 2 * n_gate_qubits)
+    state = state.reshape((2,) * n_state_qubits)
+
+    # Our qubits are labeled from least significant to most significant, i.e. our
+    # computational basis (for e.g. 2 qubits) is ordered like |00⟩, |01⟩, |10⟩, |11⟩.
+    # We represent the state as a tensor in *row-major* order; this means that the
+    # axis ordering is *backwards* compared to the qubit ordering (the least significant
+    # qubit corresponds to the *last* axis in the tensor etc.)
+    qubit_axes = tuple(n_state_qubits - 1 - np.asarray(qubits))
+
+    # Applying the gate to the state vector is then the tensor product over the appropriate axes
+    axes = (np.arange(n_gate_qubits, 2 * n_gate_qubits), qubit_axes)
+    new_state = np.tensordot(gate, state, axes=axes)
+
+    # tensordot effectively re-orders the qubits such that the qubits we operated
+    # on are in the most-significant positions (i.e. their axes come first). We
+    # thus need to transpose the axes to place them back into their original positions.
+    untouched_axes = tuple(
+        idx for idx in range(n_state_qubits) if idx not in qubit_axes
+    )
+    inverse_permutation = np.argsort(qubit_axes + untouched_axes)
+    return np.transpose(new_state, inverse_permutation).reshape(-1)
 
 
 def _check_valid_gate(gate):

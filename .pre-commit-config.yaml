@@ -11,10 +11,7 @@ repos:
       exclude: '.bumpversion.cfg'
     - id: trailing-whitespace
       exclude: '.bumpversion.cfg'
-# Disable this until 3.8.0 is released (as explained in
-# https://gitlab.com/pycqa/flake8/issues/450)
-#-   repo: https://gitlab.com/pycqa/flake8
-#    rev: 3.8.0
-#    hooks:
-#    - id: flake8
-#      args: ['--config=tox.ini']
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.7.9
+    hooks:
+    - id: flake8

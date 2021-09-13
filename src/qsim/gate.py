@@ -149,7 +149,7 @@ def phase_shift(phi):
 # -- Two qubit gates --
 
 #: Controlled NOT gate
-cnot = controlled(x)
+cnot = controlled(not_)
 #: SWAP gate
 swap = np.identity(4, complex)[:, (0, 2, 1, 3)]
 

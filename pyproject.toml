@@ -17,8 +17,8 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
 ]
 requires = [
     "numpy",
@@ -34,6 +34,7 @@ test = [
     "hypothesis[numpy]",
     "tox",
     "flake8-per-file-ignores",
+    "flake8>=3.7.2",  # https://github.com/pycqa/flake8/issues/668
 ]
 docs = [
     "sphinx",

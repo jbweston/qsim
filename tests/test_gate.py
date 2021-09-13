@@ -21,7 +21,9 @@ def select_n_qubits(gate_size):
     def _strat(n_qubits):
         assert n_qubits >= gate_size
         possible_qubits = st.integers(0, n_qubits - 1)
-        return st.lists(possible_qubits, gate_size, gate_size, unique=True).map(tuple)
+        return st.lists(
+            possible_qubits, min_size=gate_size, max_size=gate_size, unique=True
+        ).map(tuple)
 
     return _strat
 
@@ -35,7 +37,7 @@ phases = st.floats(
 def unitary(n_qubits):
     size = 1 << n_qubits
     return (
-        hnp.arrays(complex, (size, size), valid_complex)
+        hnp.arrays(complex, (size, size), elements=valid_complex)
         .map(lambda a: np.linalg.qr(a)[0])
         .filter(lambda u: np.all(np.isfinite(u)))
     )
@@ -44,7 +46,7 @@ def unitary(n_qubits):
 def ket(n_qubits):
     size = 1 << n_qubits
     return (
-        hnp.arrays(complex, (size,), valid_complex)
+        hnp.arrays(complex, (size,), elements=valid_complex)
         .filter(lambda v: np.linalg.norm(v) > 0)  # vectors must be normalizable
         .map(lambda v: v / np.linalg.norm(v))
     )
@@ -148,7 +150,7 @@ def test_swap():
 
 @given(single_qubit_gates, n_qubits.flatmap(ket), n_qubits.flatmap(select_n_qubits(1)))
 def test_applying_single_gates(gate, state, selected):
-    qubit, = selected
+    (qubit,) = selected
     n_qubits = state.shape[0].bit_length() - 1
     parts = [np.identity(2)] * n_qubits
     parts[qubit] = gate

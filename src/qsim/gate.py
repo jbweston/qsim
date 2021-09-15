@@ -6,6 +6,8 @@ matrix written in the computational basis.
 
 import numpy as np
 
+from . import operator
+
 __all__ = [
     "apply",
     "n_qubits",
@@ -34,7 +36,8 @@ def apply(gate, qubits, state):
 
     Parameters
     ----------
-    gate : ndarray[complex]
+    gate: ndarray[complex]
+        The gate to apply.
     qubits : sequence of int
         The qubits on which to act. Qubit 0 is the least significant qubit.
     state : ndarray[complex]
@@ -43,62 +46,16 @@ def apply(gate, qubits, state):
     -------
     new_state : ndarray[complex]
     """
-    n_gate_qubits = gate.shape[0].bit_length() - 1
-    n_state_qubits = state.shape[0].bit_length() - 1
-    assert len(qubits) == n_gate_qubits
+    _check_valid_gate(gate)
+    return operator.apply(gate, qubits, state)
 
-    # We can view an n-qubit gate as a 2*n-tensor (n contravariant and n contravariant
-    # indices) and an n-qubit state as an n-tensor (contravariant indices)
-    # with each axis having length 2 (the state space of a single qubit).
-    gate = gate.reshape((2,) * 2 * n_gate_qubits)
-    state = state.reshape((2,) * n_state_qubits)
 
-    # Our qubits are labeled from least significant to most significant, i.e. our
-    # computational basis (for e.g. 2 qubits) is ordered like |00⟩, |01⟩, |10⟩, |11⟩.
-    # We represent the state as a tensor in *row-major* order; this means that the
-    # axis ordering is *backwards* compared to the qubit ordering (the least significant
-    # qubit corresponds to the *last* axis in the tensor etc.)
-    qubit_axes = tuple(n_state_qubits - 1 - np.asarray(qubits))
-
-    # Applying the gate to the state vector is then the tensor product over the appropriate axes
-    axes = (np.arange(n_gate_qubits, 2 * n_gate_qubits), qubit_axes)
-    new_state = np.tensordot(gate, state, axes=axes)
-
-    # tensordot effectively re-orders the qubits such that the qubits we operated
-    # on are in the most-significant positions (i.e. their axes come first). We
-    # thus need to transpose the axes to place them back into their original positions.
-    untouched_axes = tuple(
-        idx for idx in range(n_state_qubits) if idx not in qubit_axes
-    )
-    inverse_permutation = np.argsort(qubit_axes + untouched_axes)
-    return np.transpose(new_state, inverse_permutation).reshape(-1)
+n_qubits = operator.n_qubits
 
 
 def _check_valid_gate(gate):
-    if not (
-        # is an array
-        isinstance(gate, np.ndarray)
-        # is complex
-        and np.issubdtype(gate.dtype, np.complex128)
-        # is square
-        and gate.shape[0] == gate.shape[1]
-        # has size 2**n, n > 1
-        and np.log2(gate.shape[0]).is_integer()
-        and gate.shape[0].bit_length() > 1
-        # is unitary
-        and np.allclose(gate @ gate.conjugate().transpose(), np.identity(gate.shape[0]))
-    ):
-        raise ValueError("Gate is not valid")
-
-
-def n_qubits(gate):
-    """Return the number of qubits that a gate acts on.
-
-    Raises ValueError if 'gate' does not have a shape that is
-    an integer power of 2.
-    """
-    _check_valid_gate(gate)
-    return gate.shape[0].bit_length() - 1
+    if not operator.is_unitary(gate):
+        raise ValueError("Gate is invalid")
 
 
 def controlled(gate):

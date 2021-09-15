@@ -28,7 +28,9 @@ def select_n_qubits(gate_size):
     return _strat
 
 
-valid_complex = st.complex_numbers(allow_infinity=False, allow_nan=False)
+valid_complex = st.complex_numbers(
+    max_magnitude=1e10, allow_infinity=False, allow_nan=False
+)
 phases = st.floats(
     min_value=0, max_value=2 * np.pi, allow_nan=False, allow_infinity=False
 )
@@ -89,11 +91,6 @@ def test_n_qubits_invalid(gate):
     # Not size 2**n, n > 0
     with pytest.raises(ValueError):
         qsim.gate.n_qubits(gate[:-1, :-1])
-    # Not unitary
-    nonunitary_part = np.zeros_like(gate)
-    nonunitary_part[0, -1] = 1j
-    with pytest.raises(ValueError):
-        qsim.gate.n_qubits(gate + nonunitary_part)
 
 
 @given(n_qubits, n_qubit_gates)

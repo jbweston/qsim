@@ -10,7 +10,7 @@ by the associated classical bitstring.
 
 import numpy as np
 
-__all__ = ["from_classical", "is_normalized", "num_qubits", "zero"]  # type: ignore
+__all__ = ["from_classical", "is_normalized", "is_normalizable", "normalize", "num_qubits", "zero"]  # type: ignore
 
 
 def from_classical(bitstring):
@@ -59,7 +59,22 @@ def num_qubits(state):
 
 def is_normalized(state: np.ndarray) -> bool:
     """Return True if and only if 'state' is normalized."""
-    return np.allclose(np.linalg.norm(state), 1)
+    return np.isclose(np.linalg.norm(state), 1)
+
+
+def is_normalizable(v: np.ndarray) -> bool:
+    """Return True if and only if 'v' is normalizable."""
+    # If the norm is too small then normalizing a vector using
+    # the norm will yield a vector that is not normalized to machine
+    # precision.
+    return bool(np.linalg.norm(v) ** 2 > np.finfo(float).smallest_normal)
+
+
+def normalize(state: np.ndarray) -> np.ndarray:
+    """Return a normalized state, given a potentially un-normalized one."""
+    if not is_normalizable(state):
+        raise ValueError("State is not normalizable")
+    return state / np.linalg.norm(state)
 
 
 def _check_valid_state(state):

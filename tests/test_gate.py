@@ -2,65 +2,20 @@ from functools import reduce
 
 from hypothesis import given
 import hypothesis.strategies as st
-import hypothesis.extra.numpy as hnp
 import numpy as np
 import pytest
 
 import qsim.gate
 
-
-# -- Strategies for generating values --
-
-
-n_qubits = st.shared(st.integers(min_value=1, max_value=6))
-
-
-# Choose which qubits from 'n_qubits' to operate on with a gate that
-# operates on 'gate_size' qubits
-def select_n_qubits(gate_size):
-    def _strat(n_qubits):
-        assert n_qubits >= gate_size
-        possible_qubits = st.integers(0, n_qubits - 1)
-        return st.lists(
-            possible_qubits, min_size=gate_size, max_size=gate_size, unique=True
-        ).map(tuple)
-
-    return _strat
-
-
-valid_complex = st.complex_numbers(
-    max_magnitude=1e10, allow_infinity=False, allow_nan=False
+from .common import (
+    ket,
+    single_qubit_gates,
+    n_qubit_gates,
+    valid_states,
+    n_qubits,
+    phases,
+    select_n_qubits,
 )
-phases = st.floats(
-    min_value=0, max_value=2 * np.pi, allow_nan=False, allow_infinity=False
-)
-
-
-def unitary(n_qubits):
-    size = 1 << n_qubits
-    return (
-        hnp.arrays(complex, (size, size), elements=valid_complex)
-        .map(lambda a: np.linalg.qr(a)[0])
-        .filter(lambda u: np.all(np.isfinite(u)))
-    )
-
-
-def ket(n_qubits):
-    size = 1 << n_qubits
-    return (
-        hnp.arrays(complex, (size,), elements=valid_complex)
-        .filter(lambda v: np.linalg.norm(v) > 0)  # vectors must be normalizable
-        .map(lambda v: v / np.linalg.norm(v))
-    )
-
-
-single_qubit_gates = unitary(1)
-two_qubit_gates = unitary(2)
-n_qubit_gates = n_qubits.flatmap(unitary)
-
-# Projectors on the single qubit computational basis
-project_zero = np.array([[1, 0], [0, 0]])
-project_one = np.array([[0, 0], [0, 1]])
 
 
 def product_gate(single_qubit_gates):
@@ -69,7 +24,8 @@ def product_gate(single_qubit_gates):
     return reduce(np.kron, reversed(single_qubit_gates))
 
 
-# -- Tests --
+project_zero = np.array([[1, 0], [0, 0]])
+project_one = np.array([[0, 0], [0, 1]])
 
 
 @given(n_qubits, n_qubit_gates)
@@ -145,7 +101,7 @@ def test_swap():
     assert np.all(qsim.gate.swap @ qsim.gate.swap == np.identity(4))
 
 
-@given(single_qubit_gates, n_qubits.flatmap(ket), n_qubits.flatmap(select_n_qubits(1)))
+@given(single_qubit_gates, valid_states, n_qubits.flatmap(select_n_qubits(1)))
 def test_applying_single_gates(gate, state, selected):
     (qubit,) = selected
     n_qubits = state.shape[0].bit_length() - 1
@@ -167,11 +123,13 @@ def test_applying_single_gates(gate, state, selected):
 def test_applying_controlled_single_qubit_gates(gate, state, selected):
     control, qubit = selected
     n_qubits = state.shape[0].bit_length() - 1
-    # When control qubit is |0⟩ the controlled gate acts like the identity on the other qubit
+    # When control qubit is |0⟩ the controlled gate acts
+    # like the identity on the other qubit
     parts_zero = [np.identity(2)] * n_qubits
     parts_zero[control] = project_zero
     parts_zero[qubit] = np.identity(2)
-    # When control qubit is |1⟩ the controlled gate acts like the original gate on the other qubit
+    # When control qubit is |1⟩ the controlled gate acts
+    # like the original gate on the other qubit
     parts_one = [np.identity(2)] * n_qubits
     parts_one[control] = project_one
     parts_one[qubit] = gate

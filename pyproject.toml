@@ -7,7 +7,7 @@ module = "qsim"
 author = "Joseph Weston"
 author-email = "joseph@weston.cloud"
 home-page = "https://github.com/jbweston/qsim"
-requires-python=">=3.6"
+requires-python=">=3.11"
 description-file="README.md"
 keywords = "quantum simulator"
 classifiers = [
@@ -17,8 +17,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
 ]
 requires = [
     "numpy",
@@ -28,13 +27,12 @@ requires = [
 test = [
     "pytest",
     "pytest-cov",
-    "pytest-flake8",
+    "pytest-ruff",
     "pytest-mypy",
     "pytest-black",
     "hypothesis[numpy]",
     "tox",
-    "flake8-per-file-ignores",
-    "flake8>=3.7.2",  # https://github.com/pycqa/flake8/issues/668
+    "ruff",
 ]
 docs = [
     "sphinx",

@@ -68,7 +68,7 @@ def _check_valid_state(state):
         isinstance(state, np.ndarray)
         # is complex
         and np.issubdtype(state.dtype, np.complex128)
-        # is square
+        # is a vector
         and len(state.shape) == 1
         # has size 2**n, n > 1
         and np.log2(state.shape[0]).is_integer()

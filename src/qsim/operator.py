@@ -38,7 +38,8 @@ def apply(op, qubits, state):
     # qubit corresponds to the *last* axis in the tensor etc.)
     qubit_axes = tuple(n_state_qubits - 1 - np.asarray(qubits))
 
-    # Applying the op to the state vector is then the tensor product over the appropriate axes
+    # Applying the op to the state vector is then the tensor product over the
+    # appropriate axes.
     axes = (np.arange(n_op_qubits, 2 * n_op_qubits), qubit_axes)
     new_state = np.tensordot(op, state, axes=axes)
 
